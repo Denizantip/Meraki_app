@@ -1,0 +1,21 @@
+{% extends "main.html" %}
+{% block content %}
+    <div class="login-page">
+    <div class="form">
+        </form>
+        <form class="login-form" action="" method="post">
+            <input type="text" name="username" placeholder="username" autocomplete="off"/>
+            <input type="password" name="password" placeholder="password"/>
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <ul class=flashes>
+                        <li>{{ messages[-1] }}</li>
+
+                    </ul>
+                {% endif %}
+            {% endwith %}
+            <button>log in</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

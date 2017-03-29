@@ -1,0 +1,34 @@
+{% extends "main.html" %}
+{% block content %}
+
+    <h1>Hello, {{ username }}</h1>
+    <button id = button>Statistic</button>
+<script>
+    $('#button').click(function() {
+    $('#content > .content-message').remove();
+        $.ajax({
+            type: "GET",
+            ifModified: true,
+            url: "{{ url_for('load_ajax') }}",
+            success: function (data) {
+                var data1 = [];
+                data1 = JSON.parse(data);
+                for (var i = 0; i<data.length; i++){
+                    $('#content').append(data1[i]);
+                    $(".fa-circle").removeClass('circle-red');
+                    $('.fa-circle').addClass('circle-green');
+                    console.log(typeof data1);
+                }
+            },
+            error: function(data, status){
+                console.log(data, status);
+                 $(".fa-circle").removeClass('circle-green');
+                    $('.fa-circle').addClass('circle-red');
+            }
+        });
+        }
+    )
+
+</script>
+
+{% endblock %}
