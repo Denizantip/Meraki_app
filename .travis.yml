@@ -13,5 +13,4 @@ services:
 before_script:
   - mysqladmin -u root password D120d10k83
   - mysql -e 'create database meraki_db;'
-  - python test_json.py
 script: nosetests
