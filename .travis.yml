@@ -5,7 +5,7 @@ python:
 install: 
   -pip install -r requirements.txt
 before_install:
-  -libmysqlclient-dev
+  -sudo apt-get install libmysqlclient-dev
 sudo: true
 services:
   - mysql
