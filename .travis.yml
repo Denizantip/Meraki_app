@@ -16,4 +16,4 @@ before_script:
 after_success:
   - python test_json.py
   - mysql -e 'INSERT INTO meraki_db.role (rolename) VALUES ('admin');INSERT INTO meraki_db.role (rolename) VALUES ('user');'
-  
+script: nosetests
