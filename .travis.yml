@@ -3,13 +3,14 @@ python:
   - "3.4"
   - "3.5"
 install: 
-  -"pip install -r requirements.txt"
-  -'libmysqlclient-dev'
+  -pip install -r requirements.txt
+before_install:
+  -libmysqlclient-dev
 sudo: true
 services:
   - mysql
 before_script:
-  - mysqladmin -u root password 'D120d10k83'
+  - mysqladmin -u root password D120d10k83
   - mysql -e 'create database meraki_db;'
   - python test_json.py
   - mysql -e "INSERT INTO meraki_db.role (rolename) VALUES ('admin');INSERT INTO meraki_db.role (rolename) VALUES ('user');"
