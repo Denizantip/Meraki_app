@@ -1,13 +1,13 @@
 import json
 import os
-
 import flask_bcrypt
-import database
+import datetime
 
 from wrdb import JSON_data
 import flask
 from flask import url_for
 from flask.ext.login import login_required, login_user, logout_user, LoginManager, current_user
+from database import *
 
 ########################################
 
@@ -19,13 +19,14 @@ login_manager.login_view = "login"
 
 @login_manager.user_loader
 def load_user(userid):
-    return session.query(database.User).get(userid)
+    return session.query(User).get(userid)
 
 
 def is_json(myjson):
     try:
         json_object = json.loads(myjson)
     except ValueError as e:
+        logger.debug("Error has occured: \n{}".format(e))
         return e
     return True
 
@@ -44,28 +45,26 @@ def resp(code, data):
 
 @app.errorhandler(400)
 def page_not_found(e):
+    logger.debug("Error {}".format(e))
     return resp(400, {})
 
 
-# @app.errorhandler(500)
-# def page_not_found(e):
-#     return flask.render_template("404.html"), 500
+@app.errorhandler(500)
+def page_not_found(e):
+    logger.debug("Error {}".format(e))
+    return flask.render_template("404.html"), 500
 
 
 @app.errorhandler(404)
 def page_not_found(e):
+    logger.debug("Error {}".format(e))
     return flask.render_template("404.html"), 404
 
 
 @app.errorhandler(405)
 def page_not_found(e):
+    logger.debug("Error {}".format(e))
     return resp(405, {})
-
-
-@app.route("/term")
-@login_required
-def term():
-    flask.redirect("127.0.0.1:5001/terminal", 302)
 
 
 @app.route('/index')
@@ -76,7 +75,7 @@ def index():
         rolename = "anonym"
         return flask.render_template("index.html", username=rolename, role=rolename), 200
     else:
-        role = session.query(database.Role).get(current_user.roleid)
+        role = session.query(Role).get(current_user.roleid)
         return flask.render_template("index.html", username=current_user.username, role=role.rolename, lines=[]), 200
 
 
@@ -87,11 +86,11 @@ def login():
     username = flask.request.form['username']
     password = flask.request.form['password']
 
-    registered_user = session.query(database.User).filter_by(username=username).one_or_none()
+    registered_user = session.query(User).filter_by(username=username).one_or_none()
     if registered_user is None or not flask_bcrypt.check_password_hash(registered_user.password, password.encode()):
         flask.flash('Username or Password is invalid', 'error')
         return flask.redirect(url_for('login'))
-    elif session.query(database.Role).get(registered_user.roleid).rolename != 'admin':
+    elif session.query(Role).get(registered_user.roleid).rolename != 'admin':
         flask.flash("Only admin users has access to this page", "error")
     else:
         login_user(registered_user)
@@ -103,9 +102,9 @@ def login():
 @login_required
 def load_ajax():
     result = []
-    with open(database.filename, 'r') as log_file:
+    with open(filename, 'r') as log_file:
         result = ['<div class="content-message">{}</div>'.format(line.strip()) for line in tail(log_file, 30)]
-    logger.debug(result)
+        print(len(result))
     return json.dumps(result)
 
 
@@ -150,13 +149,32 @@ def get():
 
 
 if __name__ == '__main__':
+    from logging.handlers import RotatingFileHandler
     import logging
-    logger = logging.getLogger(__name__)
+
+    filename = "logs/{}-log.log".format(datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S"))
+    os.makedirs('/logs', exist_ok=True)
+    logger = logging.getLogger('main.app')
+    logger.setLevel(logging.DEBUG)
+    fh = RotatingFileHandler(filename, 'w', maxBytes=(2 * 1024 * 1024), backupCount=10, delay=0)
+    fh.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.ERROR)
+    formatter = logging.Formatter('%(levelname)s - %(asctime)s - %(name)s -  %(message)s')
+    fh.setFormatter(formatter)
+    ch.setFormatter(formatter)
+    logger.addHandler(fh)
+    logger.addHandler(ch)
     logger.debug("Server started")
+    Base.metadata.create_all(engine)
+    try:
+        create_trigger('delete_on_insert')
+        logger.info("Trigger for deleting from BL was created...")
+    except Exception:
+        logger.info("Trigger for deleting already exists")
     app.debug = False  # enables auto reload during development
     app.secret_key = "Denizantip"
-    database.Base.metadata.create_all(database.engine)
-    session = database.Session()
+    session = Session()
     port = 5000
     validator = "72bd44379a82188ccea6dc440ae528754aeada56"
     secret = "12!Secret@erc"

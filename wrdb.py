@@ -2,8 +2,7 @@ import database
 import datetime
 import logging
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG)
+logger_wrdb = logging.getLogger('main.app.wrdb')
 
 
 class JSON_data(object):
@@ -14,6 +13,7 @@ class JSON_data(object):
         self.apFloors = obj['apFloors']
         self.observations = obj['observations']
         self.session = session
+        self.logger = logging.getLogger('main.app.wrdb.JSON_data')
 
     def write_to_db(self):
         try:
@@ -24,43 +24,48 @@ class JSON_data(object):
             # if apMac_table is None:
             #     apMac_table = database.ApMac(self.apMac)
         except Exception:
-            logging.error("Database must run")
+            self.logger.error("Database must run")
             apMac_table = None
         if apMac_table:
-            logging.info("Table of router exists")
+            self.logger.debug("Table of router exists")
             for apTag in self.apTags:
                 instance = database.ApTag(apTag)
                 apMac_table.apTags.append(instance)
                 self.session.add(instance)
             else:
-                logging.info("Adding apTags")
+                self.logger.debug("Adding apTags")
             for apFloor in self.apFloors:
                 instance = database.ApFloor(apFloor)
                 apMac_table.apFloors.append(instance)
                 self.session.add(instance)
             else:
-                logging.info("Adding apFloors")
+                self.logger.debug("Adding apFloors")
             for observation in self.observations:
+                if self.session.query(database.Observation.clientMac).filter_by(
+                        clientMac=observation['clientMac']).count() > 50:
+                    self.session.add(database.BlackBook(observation['clientMac']))
+                    self.logger.debug("Client Was added to black list")
                 if not self.check_black_list(observation['clientMac']):
                     del observation['location']
                     observation['seenTime'] = datetime.datetime.strptime(observation["seenTime"], "%Y-%m-%dT%H:%M:%SZ")
                     instance = database.Observation(**observation)
                     apMac_table.observations.append(instance)
                     self.session.add(instance)
-            else:
-                logging.info("add observations")
+                    self.logger.debug("Adding observations")
+                else:
+                    self.logger.debug("Nothing added")
+
         else:
-            logging.info("router table with getted mac not exists")
+            self.logger.debug("router table with getted mac not exists")
         self.session.commit()
 
     def check_black_list(self, client_mac):
-        bl = (i.clientMac for i in self.session.query(database.BlackBook).all())
+        bl = list(i.clientMac for i in self.session.query(database.BlackBook).all())
         if client_mac in bl:
-            logging.info("Client from bl was detected")
+            self.logger.info("Client from bl was detected")
             return True
         else:
             return False
-
 
 
 def test_class():

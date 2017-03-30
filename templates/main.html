@@ -3,6 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <link rel="apple-touch-icon" sizes="57x57" href="/static/images/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="/static/images/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/static/images/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/static/images/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/static/images/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/static/images/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/static/images/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/static/images/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/images/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192"  href="/static/images/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/static/images/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/images/favicon-16x16.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
+    <meta name="theme-color" content="#ffffff">
     <link rel="stylesheet" href="/static/css/bootstrap.min.css">
     <link rel="stylesheet" href="/static/css/AdminLTE.css">
     <link rel="stylesheet" href="/static/css/skin-black-light.css">
@@ -10,7 +27,6 @@
     <link rel="stylesheet" href="/static/css/font-awesome.min.css">
     <link href="/static/css/login.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Crimson+Text|Dosis" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
     <!--<script type="text/javascript" src="/static/js/login.js' />"></script> -->
     <script src="/static/js/bootstrap.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
@@ -20,7 +36,7 @@
     <header class="main-header">
 
         <!-- Logo -->
-        <a href="#" class="logo">
+        <a href={{ url_for('index') }} class="logo">
             <!-- mini logo for sidebar mini 50x50 pixels -->
             <span class="logo-mini">
             <img src="/static/images/CiscoMeraki.png" alt="logo">
@@ -57,7 +73,7 @@
                                 <img src="/static/images/avatar.png" class="img-circle" alt="User Image">
                                 <p>
                                     You are logged in as {{ role }}
-                                    <small>Member since {{ regdate }}</small>
+                                    <small>Member since {{ current_user.regdate }}</small>
                                 </p>
                             </li>
                             <!-- Menu Footer-->
@@ -73,7 +89,6 @@
             </div>
         </nav>
     </header>
-    <i class="fa fa-circle circle-green" aria-hidden="true"></i>Server
     <content id="content">
         {% block content %}{% endblock %}
     </content>

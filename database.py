@@ -1,24 +1,7 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, create_engine, DateTime, MetaData, Date
+from sqlalchemy import Column, Integer, String, ForeignKey, create_engine, DateTime, MetaData, Date, func, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker, backref
-from sqlalchemy.sql import text
-import logging
-import datetime
-import os
-from logging.handlers import RotatingFileHandler
 
-os.makedirs('/logs', exist_ok=True)
-
-filename = "logs/{}-log.log".format(datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S"))
-logger = logging.getLogger(__name__)
-logging.basicConfig(format='%(levelname)s - %(asctime)s - %(name)s -  %(message)s',
-                    filename=filename,
-                    level=logging.DEBUG,
-                    datefmt='%d %b %Y %H:%M:%S',
-                    filemode='a')
-fh = RotatingFileHandler(filename, 'w', maxBytes=2048, backupCount=10, delay=0)
-logger.addHandler(fh)
-logger.setLevel(logging.DEBUG)
 engine = create_engine("mysql+mysqldb://root:D120d10k83@localhost/meraki_db", encoding="utf-8", pool_recycle=3600,
                        echo=False)
 Session = sessionmaker(bind=engine)
@@ -130,8 +113,8 @@ class ApMac(Base):
                             backref=backref("apFloor", uselist=True, cascade="save-update"))
     observations = relationship("Observation",
                                 backref=backref("observation", uselist=True))
-    event_id = Column(Integer, ForeignKey('event.event_id', ondelete="CASCADE", onupdate="CASCADE"))
-    store_id = Column(Integer, ForeignKey('store.store_id', ondelete="CASCADE", onupdate="CASCADE"))
+    event_id = Column(Integer, ForeignKey('event.event_id', ondelete="SET NULL", onupdate="SET NULL"))
+    store_id = Column(Integer, ForeignKey('store.store_id', ondelete="SET NULL", onupdate="SET NULL"))
 
     def __init__(self, apMac, router_name):
         self.apMac = apMac
@@ -195,19 +178,21 @@ class BlackBook(Base):
     __tablename__ = "blackBook"
     id = Column(Integer, primary_key=True, autoincrement=True)
     clientMac = Column(String(255), unique=True)
-    name = Column(String(255))
+    name = Column(String(255), default=None)
 
-    def __init__(self, clientMac, name):
+    def __init__(self, clientMac):
         self.clientMac = clientMac
-        self.name = name
         # loggers.info("Table blackBook created")
+    def __repr__(self):
+        return "<clientMac= %s>" % (self.clientMac)
 
 def create_trigger(trigger_name):
     tr = """
         CREATE TRIGGER {}
         AFTER INSERT ON meraki_db.blackBook FOR EACH ROW
         BEGIN
-          DELETE FROM meraki_db.observation WHERE meraki_db.observation.clientMac = NEW.clientMac;
+          DELETE FROM meraki_db.observation WHERE meraki_db.observation.clientMac = NEW.clientMac
+          HAVING count(meraki_db) > 50;
         END ;
         """.format(trigger_name, )
     conn = engine.connect()
@@ -216,8 +201,4 @@ def create_trigger(trigger_name):
 
 
 
-try:
-    create_trigger('delete_on_insert')
-    logging.info("Trigger for deleting from BL was created...")
-except Exception:
-    logging.info("Trigger for deleting already exists")
+
