@@ -13,6 +13,5 @@ services:
 before_script:
   - mysqladmin -u root password D120d10k83
   - mysql -e 'create database meraki_db;'
-  - mysql -e 'INSERT INTO meraki_db.role (rolename) VALUES ('admin');INSERT INTO meraki_db.role (rolename) VALUES ('user');'
   - python test_json.py
 script: nosetests
