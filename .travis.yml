@@ -6,3 +6,5 @@ install: "pip install -r requirements.txt"
 
 before_script:
   - mysql -e 'create database meraki_db;'
+  - python test_json.py
+  - mysql -e "INSERT INTO meraki_db.role (rolename) VALUES ('admin');INSERT INTO meraki_db.role (rolename) VALUES ('user');"
