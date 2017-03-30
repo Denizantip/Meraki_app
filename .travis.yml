@@ -3,7 +3,8 @@ python:
   - "3.4"
   - "3.5"
 install: 
-  pip install -r requirements.txt
+  -pip install -r requirements.txt
+  -pip install mysqlclient
 before_install:
   sudo apt-get install -y libmysqlclient-dev
 sudo: true
